@@ -265,12 +265,12 @@ impl TradeJournal {
                 total_trades: row.get(0)?,
                 total_pnl_sol: row.get::<_, Option<f64>>(1)?.unwrap_or(0.0),
                 avg_pnl_pct: row.get::<_, Option<f64>>(2)?.unwrap_or(0.0),
-                winning_trades: row.get(3)?.unwrap_or(0),
-                losing_trades: row.get(4)?.unwrap_or(0),
-                best_trade_sol: row.get(5)?.unwrap_or(0.0),
-                worst_trade_sol: row.get(6)?.unwrap_or(0.0),
-                total_fees_sol: row.get(7)?.unwrap_or(0.0) + row.get(8)?.unwrap_or(0.0) + row.get(9)?.unwrap_or(0.0),
-                total_tips_sol: row.get(10)?.unwrap_or(0.0),
+                winning_trades: row.get::<_, Option<i64>>(3)?.unwrap_or(0),
+                losing_trades: row.get::<_, Option<i64>>(4)?.unwrap_or(0),
+                best_trade_sol: row.get::<_, Option<f64>>(5)?.unwrap_or(0.0),
+                worst_trade_sol: row.get::<_, Option<f64>>(6)?.unwrap_or(0.0),
+                total_fees_sol: row.get::<_, Option<f64>>(7)?.unwrap_or(0.0) + row.get::<_, Option<f64>>(8)?.unwrap_or(0.0) + row.get::<_, Option<f64>>(9)?.unwrap_or(0.0),
+                total_tips_sol: row.get::<_, Option<f64>>(10)?.unwrap_or(0.0),
             })
         }).map_err(|e| SniperError::DatabaseError { msg: e.to_string() })?;
 

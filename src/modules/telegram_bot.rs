@@ -1,7 +1,7 @@
 use chrono::{DateTime, Duration, Utc};
+use std::sync::Arc;
 use teloxide::prelude::*;
 use teloxide::utils::command::BotCommands;
-use teloxide::filter_command;
 use tracing::{info, warn};
 use crate::config::Config;
 use crate::core::error::SniperResult;
@@ -12,19 +12,14 @@ use crate::modules::db::TradeJournal;
 #[command(rename_rule = "lowercase")]
 enum Command {
     Start, Status, Balance, Positions,
-    #[command(parse_with = "split")]
     Pnl { period: String },
-    #[command(parse_with = "split")]
     Journal { n: usize },
     Pause, Resume,
-    #[command(parse_with = "split")]
     Forcesell { token: String },
-    #[command(parse_with = "split")]
     Setwallet { label: String },
     Listwallets,
     #[command(parse_with = "split")]
     Setrpc { label: String, url: String },
-    #[command(parse_with = "split")]
     Setwss { url: String },
     Listrpc,
     #[command(parse_with = "split")]
@@ -32,7 +27,6 @@ enum Command {
     #[command(parse_with = "split")]
     Setfilter { param: String, value: String },
     Retrain,
-    #[command(parse_with = "split")]
     Abtest { action: String },
     Logs, Help,
 }
@@ -91,11 +85,19 @@ impl TelegramBot {
         Ok(())
     }
 
-    pub async fn start(&self) -> SniperResult<()> {
+    pub async fn start(self: Arc<Self>) -> SniperResult<()> {
         info!("Starting Telegram bot...");
-        teloxide::repl(self.bot.clone(), |msg: Message, cmd: Command| async move {
-            // Handler body - dispatch handled below
-        }).await;
+        let bot = self.bot.clone();
+        Command::repl(bot, move |_bot: Bot, msg: Message, cmd: Command| {
+            let this = self.clone();
+            async move {
+                if let Err(e) = this.dispatch(msg, cmd).await {
+                    warn!("Command dispatch failed: {}", e);
+                }
+                Ok(())
+            }
+        })
+        .await;
         Ok(())
     }
 }

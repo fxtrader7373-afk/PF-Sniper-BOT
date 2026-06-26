@@ -47,7 +47,7 @@ impl WsListener {
                     let filter = solana_client::rpc_config::RpcTransactionLogsFilter::Mentions(vec![pid.to_string()]);
                     let cfg = solana_client::rpc_config::RpcTransactionLogsConfig { commitment: Some(solana_sdk::commitment_config::CommitmentConfig::confirmed()) };
                     match client.logs_subscribe(filter, cfg).await {
-                        Ok((_sub, mut stream)) => {
+                        Ok((mut stream, _unsub)) => {
                             info!("Subscribed");
                             while running.load(std::sync::atomic::Ordering::Relaxed) {
                                 if let Some(log) = futures::StreamExt::next(&mut stream).await {

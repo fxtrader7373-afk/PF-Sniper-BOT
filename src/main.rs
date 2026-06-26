@@ -10,7 +10,7 @@ mod modules;
 mod utils;
 
 use config::{Config, RuntimeState, generate_default_config};
-use core::error::SniperResult;
+use core::error::{SniperError, SniperResult};
 use core::types::*;
 use modules::rpc_provider::RpcManager;
 use modules::ws_listener::WsListener;
@@ -111,14 +111,14 @@ pub async fn init_app(cli: &CliArgs) -> SniperResult<AppContext> {
     info!("=== pf-sniper v0.1.0 ===");
 
     let mut config = if cli.config_path.exists() {
-        Config::from_file(&cli.config_path).map_err(|e| SniperError::ConfigError(e.to_string()))?
+        Config::from_file(&cli.config_path).map_err(|e| SniperError::ConfigError { msg: e.to_string() })?
     } else {
-        generate_default_config(&cli.config_path).map_err(|e| SniperError::ConfigError(e.to_string()))?;
-        Config::from_file(&cli.config_path).map_err(|e| SniperError::ConfigError(e.to_string()))?
+        generate_default_config(&cli.config_path).map_err(|e| SniperError::ConfigError { msg: e.to_string() })?;
+        Config::from_file(&cli.config_path).map_err(|e| SniperError::ConfigError { msg: e.to_string() })?
     };
 
     if cli.dry_run { config.trading.paper_mode = true; warn!("DRY-RUN MODE forced"); }
-    config.validate().map_err(|e| SniperError::ConfigError(e.to_string()))?;
+    config.validate().map_err(|e| SniperError::ConfigError { msg: e.to_string() })?;
 
     let runtime_state = RuntimeState::new(config.filters.clone(), config.risk.clone());
     let rpc_manager = RpcManager::new();
