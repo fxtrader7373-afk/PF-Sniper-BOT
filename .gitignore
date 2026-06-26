@@ -1,0 +1,6 @@
+/target
+/config.toml
+*.db
+.env
+keystore/
+backtest_data

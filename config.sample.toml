@@ -1,0 +1,48 @@
+# pf-sniper Configuration Template
+# EDIT ALL VALUES BELOW before running
+
+[trading]
+paper_mode = true                    # true = simulate, false = real capital
+default_buy_amount_lamports = 100000000  # 0.1 SOL
+active_wallet_label = ""             # Label referencing encrypted keystore
+jito_tip_lamports = 500000           # 0.0005 SOL tip per bundle
+compute_unit_limit = 200000          # Max CU per transaction
+priority_fee_micro_lamports = 1000   # Priority fee
+
+[rpc]
+ws_endpoint = "wss://api.mainnet-beta.solana.com"  # WebSocket for logsSubscribe
+geyser_endpoint = ""                 # Optional Geyser gRPC for lower latency
+
+[rpc.http_endpoints]
+helius = "https://api.helius.xyz/?api-key=YOUR_KEY"
+quicknode = "https://your-endpoint.quicknode.rpc/"
+public = "https://api.mainnet-beta.solana.com"
+
+[risk]
+kelly_fraction = 0.25                # Fractional Kelly (0.25 = conservative)
+max_position_size_lamports = 500000000  # 0.5 SOL hard cap
+stop_loss_pct = 0.30                 # 30% stop-loss
+take_profit_1_pct = 0.50             # 50% first TP rung
+take_profit_2_pct = 1.00             # 100% second TP rung
+max_concurrent_positions = 5         # Max open positions at once
+consecutive_loss_circuit_breaker = 5 # Pause after N consecutive losses
+
+[filters]
+min_entry_score = 65                 # Minimum composite score (0-100)
+max_dev_holder_concentration = 0.15  # Max top-10 holder concentration
+max_gini_coefficient = 0.60          # Max Gini coefficient
+min_wash_trade_unique_ratio = 0.40   # Min unique wallets / total trades
+entry_delay_seconds = 3              # Wait N seconds before entering
+max_bundled_buy_cluster_size = 3     # Max same-slot buys to tolerate
+min_trades_for_analysis = 10         # Min trades before holder analysis
+
+[telegram]
+bot_token = ""                       # Your Telegram bot token from @BotFather
+authorized_user_ids = []             # Telegram user IDs allowed to control bot
+
+[database]
+path = "pf_sniper.db"                # SQLite journal file
+
+[backtest]
+data_path = "backtest_data"          # Historical data directory
+run_on_startup = false               # Run backtest when bot starts
