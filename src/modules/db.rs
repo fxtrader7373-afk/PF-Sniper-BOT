@@ -25,7 +25,7 @@ impl TradeJournal {
     /// Open or create the trade journal database
     pub fn open(path: &Path) -> SniperResult<Self> {
         let conn = Connection::open(path)
-            .map_err(|e| SniperError::DatabaseError { source: e })?;
+            .map_err(|e| SniperError::DatabaseError { msg: e.to_string() })?;
 
         // Create tables if they don't exist
         conn.execute_batch(
@@ -112,7 +112,7 @@ impl TradeJournal {
                 live_trades INTEGER,
                 promoted INTEGER NOT NULL DEFAULT 0
             );"
-        ).map_err(|e| SniperError::DatabaseError { source: e })?;
+        ).map_err(|e| SniperError::DatabaseError { msg: e.to_string() })?;
 
         info!("Database opened at {:?}", path);
         Ok(Self { conn })
@@ -138,7 +138,7 @@ impl TradeJournal {
                 if entry.is_paper { 1 } else { 0 },
                 if entry.was_override { 1 } else { 0 },
             ],
-        ).map_err(|e| SniperError::DatabaseError { source: e })?;
+        ).map_err(|e| SniperError::DatabaseError { msg: e.to_string() })?;
 
         let id = self.conn.last_insert_rowid();
         info!("Trade entry recorded: id={} token={}", id, entry.token_mint);
@@ -175,7 +175,7 @@ impl TradeJournal {
                 entry.net_pnl_pct,
                 format!("{:?}", entry.exit_reason),
             ],
-        ).map_err(|e| SniperError::DatabaseError { source: e })?;
+        ).map_err(|e| SniperError::DatabaseError { msg: e.to_string() })?;
 
         // Also record in dev_wallet_history
         self.conn.execute(
@@ -188,7 +188,7 @@ impl TradeJournal {
                 entry.net_pnl_pct,
                 entry.entry_time.to_rfc3339(),
             ],
-        ).map_err(|e| SniperError::DatabaseError { source: e })?;
+        ).map_err(|e| SniperError::DatabaseError { msg: e.to_string() })?;
 
         info!("Trade exit recorded: id={} pnl={:.4} SOL", trade_id, entry.net_pnl_sol);
         Ok(())
@@ -207,7 +207,7 @@ impl TradeJournal {
              WHERE exit_time IS NOT NULL
              ORDER BY exit_time DESC
              LIMIT ?1"
-        ).map_err(|e| SniperError::DatabaseError { source: e })?;
+        ).map_err(|e| SniperError::DatabaseError { msg: e.to_string() })?;
 
         let trades = stmt.query_map([n], |row| {
             Ok(TradeJournalEntry {
@@ -234,10 +234,10 @@ impl TradeJournal {
                 is_paper: row.get::<_, i32>(20)? != 0,
                 was_override: row.get::<_, i32>(21)? != 0,
             })
-        }).map_err(|e| SniperError::DatabaseError { source: e })?;
+        }).map_err(|e| SniperError::DatabaseError { msg: e.to_string() })?;
 
         trades.collect::<Result<Vec<_>, _>>()
-            .map_err(|e| SniperError::DatabaseError { source: e })
+            .map_err(|e| SniperError::DatabaseError { msg: e.to_string() })
     }
 
     /// Compute P&L summary for a time period
@@ -258,13 +258,13 @@ impl TradeJournal {
                     SUM(jito_tip_sol)
              FROM trade_journal
              WHERE exit_time >= ?1 AND was_override = 0"
-        ).map_err(|e| SniperError::DatabaseError { source: e })?;
+        ).map_err(|e| SniperError::DatabaseError { msg: e.to_string() })?;
 
         let summary: PnlSummary = stmt.query_row([since_str], |row| {
             Ok(PnlSummary {
                 total_trades: row.get(0)?,
-                total_pnl_sol: row.get(1)?.unwrap_or(0.0),
-                avg_pnl_pct: row.get(2)?.unwrap_or(0.0),
+                total_pnl_sol: row.get::<_, Option<f64>>(1)?.unwrap_or(0.0),
+                avg_pnl_pct: row.get::<_, Option<f64>>(2)?.unwrap_or(0.0),
                 winning_trades: row.get(3)?.unwrap_or(0),
                 losing_trades: row.get(4)?.unwrap_or(0),
                 best_trade_sol: row.get(5)?.unwrap_or(0.0),
@@ -272,7 +272,7 @@ impl TradeJournal {
                 total_fees_sol: row.get(7)?.unwrap_or(0.0) + row.get(8)?.unwrap_or(0.0) + row.get(9)?.unwrap_or(0.0),
                 total_tips_sol: row.get(10)?.unwrap_or(0.0),
             })
-        }).map_err(|e| SniperError::DatabaseError { source: e })?;
+        }).map_err(|e| SniperError::DatabaseError { msg: e.to_string() })?;
 
         Ok(summary)
     }
@@ -283,7 +283,7 @@ impl TradeJournal {
             "INSERT INTO config_changes (param_name, old_value, new_value, changed_at, changed_by)
              VALUES (?1, ?2, ?3, ?4, ?5)",
             params![param, old_value, new_value, Utc::now().to_rfc3339(), changed_by],
-        ).map_err(|e| SniperError::DatabaseError { source: e })?;
+        ).map_err(|e| SniperError::DatabaseError { msg: e.to_string() })?;
 
         info!("Config change recorded: {} = {} → {} (by {})", param, old_value, new_value, changed_by);
         Ok(())
@@ -304,7 +304,7 @@ impl TradeJournal {
                 format!("{:?}", alert.severity),
                 alert.timestamp.to_rfc3339(),
             ],
-        ).map_err(|e| SniperError::DatabaseError { source: e })?;
+        ).map_err(|e| SniperError::DatabaseError { msg: e.to_string() })?;
 
         Ok(())
     }
@@ -326,7 +326,7 @@ impl TradeJournal {
                 test.live_trades,
                 if promoted { 1 } else { 0 },
             ],
-        ).map_err(|e| SniperError::DatabaseError { source: e })?;
+        ).map_err(|e| SniperError::DatabaseError { msg: e.to_string() })?;
 
         Ok(())
     }

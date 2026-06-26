@@ -83,7 +83,7 @@ impl DevWalletReputation {
 
         // Query database
         let conn = Connection::open(&self.db_path)
-            .map_err(|e| SniperError::DatabaseError { source: e })?;
+            .map_err(|e| SniperError::DatabaseError { msg: e.to_string() })?;
 
         let profile = self.query_wallet_history(&conn, wallet)?;
         self.cache.insert(wallet_str, profile.clone());

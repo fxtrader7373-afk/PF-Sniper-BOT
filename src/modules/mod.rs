@@ -1,8 +1,3 @@
-//! Module index — all 18 core modules
-//!
-//! Each module is independently testable before integration.
-//! Build order: config → core types → analysis modules → execution → interfaces
-
 pub mod rpc_provider;
 pub mod ws_listener;
 pub mod entry_filter;
